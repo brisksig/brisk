@@ -16,7 +16,8 @@ func HelloPost(c *gee.Context) {
 
 func HelloHTML(c *gee.Context) {
 	html := "<h1>测试</h1>"
-	c.HTML(http.StatusOK, html)
+	id := c.PathParams.Get("id")
+	c.HTML(http.StatusOK, html+id)
 }
 
 func HelloForm(c *gee.Context) {
@@ -43,8 +44,8 @@ func main() {
 	// 添加路由
 	g.Router.AddRoute("/", http.MethodGet, Hello)
 	g.Post("/hello/index/", HelloPost)
-	g.Get("/index/", HelloHTML)
+	g.Get("/index/:id/", HelloHTML)
 	g.Post("/form/", HelloForm)
-	g.Post("/json/", HelloJSON)
+	g.Post("/json/*path/", HelloJSON)
 	g.Run(":9999")
 }

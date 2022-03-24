@@ -27,7 +27,7 @@ func (r router) handle(w http.ResponseWriter, req *http.Request) {
 	c := NewContext(w, req)
 	n, params := r.GetRoute(c.Method, c.Path)
 	if n != nil {
-		c.Params = params
+		c.PathParams = params
 		key := c.Method + "-" + n.pattern
 		r.handlers[key](c)
 	} else {
