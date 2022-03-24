@@ -13,6 +13,7 @@ type Context struct {
 	ResponseWriter http.ResponseWriter
 	// 请求信息
 	Path   string
+	Params map[string]string
 	Method string
 	// 响应信息
 	StatusCode int
@@ -28,6 +29,11 @@ func NewContext(w http.ResponseWriter, r *http.Request) *Context {
 }
 
 //Get Request Data Methods
+
+func (c *Context) PathParams(key string) string {
+	value, _ := c.Params[key]
+	return value
+}
 
 func (c *Context) QueryParams(key string) string {
 	return c.Request.URL.Query().Get(key)

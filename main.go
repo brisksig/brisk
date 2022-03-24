@@ -41,8 +41,8 @@ func HelloJSON(c *gee.Context) {
 func main() {
 	g := gee.New()
 	// 添加路由
-	g.Router.Add("/", http.MethodGet, Hello)
-	g.Post("/hello/", HelloPost)
+	g.Router.AddRoute("/", http.MethodGet, Hello)
+	g.Post("/hello/index/", HelloPost)
 	g.Get("/index/", HelloHTML)
 	g.Post("/form/", HelloForm)
 	g.Post("/json/", HelloJSON)

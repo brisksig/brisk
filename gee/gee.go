@@ -9,20 +9,19 @@ import (
 type Gee struct {
 	// router map
 	// example "/" -> IndexHandleFunc
-	Router     Router
-	RouterTree *RouterTree
+	Router *router
 }
 
 func New() *Gee {
-	return &Gee{Router: make(Router)}
+	return &Gee{Router: NewRouter()}
 }
 
 func (g *Gee) Post(pattern string, handler HandleFunc) {
-	g.Router.Add(pattern, http.MethodPost, handler)
+	g.Router.AddRoute(pattern, http.MethodPost, handler)
 }
 
 func (g *Gee) Get(pattern string, handler HandleFunc) {
-	g.Router.Add(pattern, http.MethodGet, handler)
+	g.Router.AddRoute(pattern, http.MethodGet, handler)
 }
 
 func (g *Gee) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -31,12 +30,11 @@ func (g *Gee) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (g *Gee) Run(addr string) (err error) {
-	g.NewTree()
 	fmt.Printf("server running····\n")
 	if strings.HasPrefix(addr, ":") {
-		fmt.Printf("http://localhost%s\n", addr)
+		fmt.Printf("listen on http://localhost%s\n", addr)
 	} else {
-		fmt.Printf("http://%s\n", addr)
+		fmt.Printf("listen on http://%s\n", addr)
 	}
 	return http.ListenAndServe(addr, g)
 }

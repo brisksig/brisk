@@ -1,114 +1,67 @@
 package gee
 
-import (
-	"strings"
-)
-
-type MethodRootMap map[string]node
+import "strings"
 
 type node struct {
 	pattern  string  // 待匹配路由，例如 /p/:lang
+	part     string  // 路由中的一部分，例如 :lang
 	children []*node // 子节点，例如 [doc, tutorial, intro]
-	isTail   bool    //是否叶子节点
-	handler  HandleFunc
+	isWild   bool    // 是否精确匹配，part 含有 : 或 * 时为true
 }
 
-type RouterTree struct {
-	MethodRootMap MethodRootMap
-}
-
-func createNode(current *node, part string) *node {
-	if len(current.children) == 0 {
-		new_child := &node{pattern: part}
-		current.children = append(current.children, new_child)
-		return new_child
-	}
-	for _, node := range current.children {
-		if node.pattern == part {
-			// 递归children
-			return node
+// 第一个匹配成功的节点，用于插入
+func (n *node) matchChild(part string) *node {
+	for _, child := range n.children {
+		if child.part == part || child.isWild {
+			return child
 		}
 	}
-	new_child := &node{pattern: part}
-	current.children = append(current.children, new_child)
-	return new_child
+	return nil
 }
 
-func buildTreeByPath(path string, root *node, handler HandleFunc) {
-	parts := strings.Split(path, "/")
-	current := root
-	var tail *node
-	flag := false
-	for _, part := range parts {
-		part += "/"
-		if part == "" {
-			flag = true
-			continue
+// 所有匹配成功的节点，用于查找
+func (n *node) matchChildren(part string) []*node {
+	nodes := make([]*node, 0)
+	for _, child := range n.children {
+		if child.part == part || child.isWild {
+			nodes = append(nodes, child)
 		}
-		tail = createNode(current, part)
 	}
-	if flag {
+	return nodes
+}
+
+func (n *node) insert(pattern string, parts []string, height int) {
+	if len(parts) == height {
+		n.pattern = pattern
 		return
 	}
-	tail.isTail = true
-	tail.handler = handler
+
+	part := parts[height]
+	child := n.matchChild(part)
+	if child == nil {
+		child = &node{part: part, isWild: part[0] == ':' || part[0] == '*'}
+		n.children = append(n.children, child)
+	}
+	child.insert(pattern, parts, height+1)
 }
 
-func (g *Gee) NewTree() {
-	routermap := g.Router
-	tree := &RouterTree{
-		MethodRootMap: make(MethodRootMap),
+func (n *node) search(parts []string, height int) *node {
+	if len(parts) == height || strings.HasPrefix(n.part, "*") {
+		if n.pattern == "" {
+			return nil
+		}
+		return n
 	}
-	for path, handler := range routermap {
-		m_p := strings.Split(path, "-")
-		method := m_p[1]
-		path := m_p[0]
-		methodRoot, ok := tree.MethodRootMap[method]
-		if !ok {
-			methodRoot = node{pattern: method}
-			buildTreeByPath(path, &methodRoot, handler)
-			tree.MethodRootMap[method] = methodRoot
-		} else {
-			buildTreeByPath(path, &methodRoot, handler)
-			tree.MethodRootMap[method] = methodRoot
+
+	part := parts[height]
+	children := n.matchChildren(part)
+
+	for _, child := range children {
+		result := child.search(parts, height+1)
+		if result != nil {
+			return result
 		}
 	}
-	g.RouterTree = tree
+
+	return nil
 }
-
-// func findNode(current *node, pattern string) (*node, error) {
-// 	for _, node := range current.children {
-// 		if node.pattern == pattern {
-// 			if len(node.children) == 0 {
-// 				// founded
-// 				return node, nil
-// 			} else {
-// 				// 递归查找
-// 				return findNode(node, pattern)
-// 			}
-// 		}
-// 	}
-// }
-
-// // search handler
-// func (g *Gee) SearchTree(path string, method string) (*HandleFunc, string) {
-// 	patterns := strings.Split(path, "/")
-// 	methodTree, ok := g.RouterTree.MethodRootMap[method]
-// 	if !ok {
-// 		return nil, fmt.Sprintf("不允许的请求方法%s", method)
-// 	} else {
-// 		current = methodTree.children
-// 		pattern = patterns[0] + "/"
-// 		for _,node := range(current) {
-// 			if node.pattern == pattern {
-// 				current =
-// 			}
-// 		}
-// 		for _, pattern := range(patterns) {
-// 			pattern += "/"
-// 			if (current.pattern == pattern) {
-// 				current = current.
-// 			}
-// 		}
-// 	}
-// }
