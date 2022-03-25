@@ -3,7 +3,6 @@
  <img width=250px height=100px src="docs/Brisk.png" alt="Project logo"></a>
 </p>
 
-<h2 align="center">Brisk</h2>
 <h4 align="center">高性能go语言web框架</h4>
 <br>
 <div align="center">
