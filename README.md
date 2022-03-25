@@ -3,13 +3,13 @@
  <img width=200px height=200px src="docs/logo.png" alt="Project logo"></a>
 </p>
 
-<h3 align="center">Gee-高性能web框架【学习版】</h3>
+<h3 align="center">Brisk-高性能web框架【学习版】</h3>
 
 <div align="center">
 
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
-[![GitHub Issues](https://img.shields.io/github/issues/DomineCore/gee.svg)](https://github.com/DomineCore/gee/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/DomineCore/gee.svg)](https://github.com/DomineCore/gee/pulls)
+[![GitHub Issues](https://img.shields.io/github/issues/DomineCore/brisk.svg)](https://github.com/DomineCore/brisk/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/DomineCore/brisk.svg)](https://github.com/DomineCore/brisk/pulls)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
 
 </div>

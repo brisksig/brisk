@@ -1,7 +1,7 @@
-module github.com/DomineCore/gee
+module github.com/DomineCore/brisk
 
 go 1.17
 
-require gee v0.0.0
+require brisk v0.0.0
 
-replace gee => ./gee
+replace brisk => ./brisk

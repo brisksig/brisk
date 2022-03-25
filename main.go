@@ -1,26 +1,26 @@
 package main
 
 import (
-	"gee"
+	"brisk"
 	"net/http"
 )
 
-func Hello(c *gee.Context) {
+func Hello(c *brisk.Context) {
 	c.WriteString(http.StatusOK, "hello world")
 }
 
-func HelloPost(c *gee.Context) {
+func HelloPost(c *brisk.Context) {
 	p := &Person{Name: "Yova"}
 	c.WriteJSON(http.StatusOK, p)
 }
 
-func HelloHTML(c *gee.Context) {
+func HelloHTML(c *brisk.Context) {
 	html := "<h1>测试</h1>"
 	id := c.PathParams["id"]
 	c.HTML(http.StatusOK, html+id)
 }
 
-func HelloForm(c *gee.Context) {
+func HelloForm(c *brisk.Context) {
 	a := c.Form("a")
 	b := c.QueryParams("b")
 	c.WriteString(http.StatusOK, "form=%s,query=%s", a, b)
@@ -30,7 +30,7 @@ type Person struct {
 	Name string `json:"name"`
 }
 
-func HelloJSON(c *gee.Context) {
+func HelloJSON(c *brisk.Context) {
 	p := &Person{}
 	err := c.JsonBind(p)
 	if err != nil {
@@ -40,7 +40,7 @@ func HelloJSON(c *gee.Context) {
 }
 
 func main() {
-	g := gee.New()
+	g := brisk.New()
 	// 添加路由
 	g.Router.Add("/", http.MethodGet, Hello)
 	g.Post("/hello/index/", HelloPost)
