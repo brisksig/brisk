@@ -1,92 +1,115 @@
 package gee
 
 import (
-	"net/http"
+	"errors"
 	"strings"
 )
 
-type HandleFunc func(c *Context)
-
-type router struct {
-	roots    map[string]*node
-	handlers map[string]HandleFunc
+type Router struct {
+	MethodTree map[string]*Trie
 }
 
-// roots key eg, roots['GET'] roots['POST']
-// handlers key eg, handlers['GET-/p/:lang/doc'], handlers['POST-/p/book']
-
-func NewRouter() *router {
-	return &router{
-		roots:    make(map[string]*node),
-		handlers: make(map[string]HandleFunc),
-	}
+func NewRouter() *Router {
+	return &Router{MethodTree: map[string]*Trie{}}
 }
 
-func (r router) handle(w http.ResponseWriter, req *http.Request) {
-	// build Context
-	c := NewContext(w, req)
-	n, params := r.GetRoute(c.Method, c.Path)
-	if n != nil {
-		c.PathParams = params
-		key := c.Method + "-" + n.pattern
-		r.handlers[key](c)
+func (r *Router) Add(pattern string, method string, handler HandleFunc) {
+	methodtree, ok := r.MethodTree[method]
+	if !ok {
+		r.MethodTree[method] = NewTrie()
+		r.MethodTree[method].Insert(pattern, handler)
 	} else {
-		c.WriteString(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+		methodtree.Insert(pattern, handler)
 	}
 }
 
-func (r *router) AddRoute(pattern string, method string, handler HandleFunc) {
-	parts := parsePattern(pattern)
-
-	key := method + "-" + pattern
-	_, ok := r.roots[method]
+func (r *Router) Dispatch(method string, pattern string, c *Context) (HandleFunc, error) {
+	methodtree, ok := r.MethodTree[method]
 	if !ok {
-		r.roots[method] = &node{}
+		return nil, errors.New("404 NotFound")
 	}
-	r.roots[method].insert(pattern, parts, 0)
-	r.handlers[key] = handler
+	handler, pathparams, err := methodtree.Search(pattern)
+	c.PathParams = pathparams
+	return handler, err
 }
 
-func (r *router) GetRoute(method string, path string) (*node, map[string]string) {
-	searchParts := parsePattern(path)
-	params := make(map[string]string)
-	root, ok := r.roots[method]
-
-	if !ok {
-		return nil, nil
-	}
-
-	n := root.search(searchParts, 0)
-
-	if n != nil {
-		parts := parsePattern(n.pattern)
-		for index, part := range parts {
-			if part[0] == ':' {
-				params[part[1:]] = searchParts[index]
-			}
-			if part[0] == '*' && len(part) > 1 {
-				params[part[1:]] = strings.Join(searchParts[index:], "/")
-				break
-			}
-		}
-		return n, params
-	}
-
-	return nil, nil
+type Node struct {
+	isTail    bool
+	isDynamic bool
+	handler   HandleFunc
+	next      map[string]*Node
 }
 
-// Only one * is allowed
+type Trie struct {
+	root *Node
+}
+
+func NewTrie() *Trie {
+	return &Trie{
+		root: &Node{next: map[string]*Node{}},
+	}
+}
+
 func parsePattern(pattern string) []string {
-	vs := strings.Split(pattern, "/")
-
-	parts := make([]string, 0)
-	for _, item := range vs {
-		if item != "" {
-			parts = append(parts, item)
-			if item[0] == '*' {
-				break
-			}
-		}
+	pattern = strings.Trim(pattern, "/")
+	parts := strings.Split(pattern, "/")
+	for idx, val := range parts {
+		parts[idx] = val + "/"
 	}
 	return parts
+}
+
+func validDynamic(part string) bool {
+	return strings.HasPrefix(part, ":")
+}
+
+func (t *Trie) Insert(pattern string, handler HandleFunc) {
+	parts := parsePattern(pattern)
+	cur := t.root
+	for _, part := range parts {
+		if _, ok := cur.next[part]; !ok {
+			newnode := &Node{next: map[string]*Node{}}
+			if validDynamic(part) {
+				for _, node := range cur.next {
+					if node.isDynamic {
+						err := errors.New("YOU CANNOT ADD THE SAME DYNAMIC RULE TO THE SAME ROUTE")
+						panic(err)
+					}
+				}
+				newnode.isDynamic = true
+			} else {
+				newnode.isDynamic = false
+			}
+			cur.next[part] = newnode
+		}
+		cur = cur.next[part]
+	}
+	cur.isTail = true
+	cur.handler = handler
+}
+
+func (t *Trie) Search(pattern string) (HandleFunc, map[string]string, error) {
+	// make pathparamsmap
+	pathparams := make(map[string]string)
+	parts := parsePattern(pattern)
+	cur := t.root
+	for _, part := range parts {
+		if _, ok := cur.next[part]; !ok {
+			found_dynamic := false
+			for keypart, node := range cur.next {
+				if node.isDynamic {
+					found_dynamic = true
+					partpath := strings.TrimLeft(keypart, ":")
+					partpath = strings.TrimRight(partpath, "/")
+					pathparams[partpath] = strings.TrimRight(part, "/")
+					part = keypart
+				}
+			}
+			if !found_dynamic {
+				return nil, pathparams, errors.New("404 NotFound")
+			}
+		}
+		cur = cur.next[part]
+	}
+	return cur.handler, pathparams, nil
 }

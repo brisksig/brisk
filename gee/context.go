@@ -7,16 +7,14 @@ import (
 	"net/http"
 )
 
-type PathParams map[string]string
-
 type Context struct {
 	// 原始结构封装
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
 	// 请求信息
 	Path       string
-	PathParams PathParams
 	Method     string
+	PathParams map[string]string // 用于存储动态路径查询参数 example: "/goods/:id/" -- > {"id":123}
 	// 响应信息
 	StatusCode int
 }
@@ -27,15 +25,11 @@ func NewContext(w http.ResponseWriter, r *http.Request) *Context {
 		ResponseWriter: w,
 		Path:           r.URL.Path,
 		Method:         r.Method,
+		PathParams:     map[string]string{},
 	}
 }
 
 //Get Request Data Methods
-
-func (p PathParams) Get(key string) string {
-	value, _ := p[key]
-	return value
-}
 
 func (c *Context) QueryParams(key string) string {
 	return c.Request.URL.Query().Get(key)
@@ -74,7 +68,7 @@ func (c *Context) WriteJSON(code int, obj interface{}) {
 	encoder := json.NewEncoder(c.ResponseWriter)
 	if err := encoder.Encode(obj); err != nil {
 		// internal server error
-		http.Error(c.ResponseWriter, err.Error(), 500)
+		http.Error(c.ResponseWriter, err.Error(), http.StatusInternalServerError)
 	}
 }
 

@@ -7,9 +7,7 @@ import (
 )
 
 type Gee struct {
-	// router map
-	// example "/" -> IndexHandleFunc
-	Router *router
+	Router *Router
 }
 
 func New() *Gee {
@@ -17,16 +15,25 @@ func New() *Gee {
 }
 
 func (g *Gee) Post(pattern string, handler HandleFunc) {
-	g.Router.AddRoute(pattern, http.MethodPost, handler)
+	g.Router.Add(pattern, http.MethodPost, handler)
 }
 
 func (g *Gee) Get(pattern string, handler HandleFunc) {
-	g.Router.AddRoute(pattern, http.MethodGet, handler)
+	g.Router.Add(pattern, http.MethodGet, handler)
 }
 
 func (g *Gee) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// 路由分发
-	g.Router.handle(w, req)
+	// 1、上下文构建
+	c := NewContext(w, req)
+	// 2、路由分发
+	method := c.Method
+	pattern := c.Path
+	handler, err := g.Router.Dispatch(method, pattern, c)
+	if err != nil {
+		c.WriteString(http.StatusNotFound, "404 Not Found")
+	} else {
+		handler(c)
+	}
 }
 
 func (g *Gee) Run(addr string) (err error) {
