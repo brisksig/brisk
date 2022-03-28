@@ -40,12 +40,19 @@ func HelloJSON(c *brisk.Context) {
 }
 
 func main() {
-	g := brisk.New()
+	b := brisk.New()
 	// 添加路由
-	g.Router.Add("/", http.MethodGet, Hello)
-	g.Post("/hello/index/", HelloPost)
-	g.Get("/index/:id/", HelloHTML)
-	g.Post("/form/", HelloForm)
-	g.Post("/json/path/", HelloJSON)
-	g.Run(":9999")
+	b.Router.Add("/", http.MethodGet, Hello)
+	b.Post("/hello/index/", HelloPost)
+	b.Get("/index/:id/", HelloHTML)
+	b.Post("/form/", HelloForm)
+	b.Post("/json/path/", HelloJSON)
+	// 子路由
+	r := brisk.NewRouter()
+	r.Add("/v1/", http.MethodGet, Hello)
+	r.Add("/v2/", http.MethodPost, HelloJSON)
+	b.Router.Include("/api/", r)
+	// 中间件
+	// b.Router.Use(&brisk.LoggingMiddleware{})
+	b.Run(":8001")
 }

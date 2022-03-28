@@ -50,6 +50,7 @@ func (c *Context) JsonBind(obj interface{}) error {
 // Set Response Info
 
 func (c *Context) SetStatusCode(code int) {
+	c.StatusCode = code
 	c.ResponseWriter.WriteHeader(code)
 }
 

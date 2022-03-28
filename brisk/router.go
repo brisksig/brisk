@@ -2,42 +2,43 @@ package brisk
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
 type Router struct {
-	MethodTree map[string]*Trie
+	tree        *Trie
+	Middlewares []MiddleWare
 }
 
 func NewRouter() *Router {
-	return &Router{MethodTree: map[string]*Trie{}}
+	return &Router{tree: NewTrie()}
+}
+
+func (r *Router) Use(middleware MiddleWare) {
+	r.Middlewares = append(r.Middlewares, middleware)
 }
 
 func (r *Router) Add(pattern string, method string, handler HandleFunc) {
-	methodtree, ok := r.MethodTree[method]
-	if !ok {
-		r.MethodTree[method] = NewTrie()
-		r.MethodTree[method].Insert(pattern, handler)
-	} else {
-		methodtree.Insert(pattern, handler)
-	}
+	r.tree.Insert(pattern, method, handler)
+}
+
+func (r *Router) Include(pattern string, child *Router) {
+	r.tree.InsertChild(pattern, child)
 }
 
 func (r *Router) Dispatch(method string, pattern string, c *Context) (HandleFunc, error) {
-	methodtree, ok := r.MethodTree[method]
-	if !ok {
-		return nil, errors.New("404 NotFound")
-	}
-	handler, pathparams, err := methodtree.Search(pattern)
+	handler, pathparams, err := r.tree.Search(pattern, c.Method)
 	c.PathParams = pathparams
 	return handler, err
 }
 
 type Node struct {
-	isTail    bool
-	isDynamic bool
-	handler   HandleFunc
-	next      map[string]*Node
+	isTail         bool
+	isDynamic      bool
+	handler        HandleFunc
+	next           map[string]*Node
+	supportMethods []string
 }
 
 type Trie struct {
@@ -46,7 +47,7 @@ type Trie struct {
 
 func NewTrie() *Trie {
 	return &Trie{
-		root: &Node{next: map[string]*Node{}},
+		root: &Node{next: map[string]*Node{}, supportMethods: make([]string, 0)},
 	}
 }
 
@@ -63,7 +64,7 @@ func validDynamic(part string) bool {
 	return strings.HasPrefix(part, ":")
 }
 
-func (t *Trie) Insert(pattern string, handler HandleFunc) {
+func (t *Trie) Insert(pattern string, method string, handler HandleFunc) {
 	parts := parsePattern(pattern)
 	cur := t.root
 	for _, part := range parts {
@@ -86,9 +87,34 @@ func (t *Trie) Insert(pattern string, handler HandleFunc) {
 	}
 	cur.isTail = true
 	cur.handler = handler
+	cur.supportMethods = append(cur.supportMethods, method)
 }
 
-func (t *Trie) Search(pattern string) (HandleFunc, map[string]string, error) {
+func (t *Trie) InsertChild(pattern string, child *Router) {
+	parts := parsePattern(pattern)
+	cur := t.root
+	for _, part := range parts {
+		if _, ok := cur.next[part]; !ok {
+			newnode := &Node{next: map[string]*Node{}}
+			if validDynamic(part) {
+				for _, node := range cur.next {
+					if node.isDynamic {
+						err := errors.New("YOU CANNOT ADD THE SAME DYNAMIC RULE TO THE SAME ROUTE")
+						panic(err)
+					}
+				}
+				newnode.isDynamic = true
+			} else {
+				newnode.isDynamic = false
+			}
+			cur.next[part] = newnode
+		}
+		cur = cur.next[part]
+	}
+	cur.next = child.tree.root.next
+}
+
+func (t *Trie) searchNode(pattern string) (*Node, map[string]string, error) {
 	// make pathparamsmap
 	pathparams := make(map[string]string)
 	parts := parsePattern(pattern)
@@ -111,5 +137,21 @@ func (t *Trie) Search(pattern string) (HandleFunc, map[string]string, error) {
 		}
 		cur = cur.next[part]
 	}
-	return cur.handler, pathparams, nil
+	return cur, pathparams, nil
+}
+
+func (t *Trie) Search(pattern string, method string) (HandleFunc, map[string]string, error) {
+	node, pathparams, err := t.searchNode(pattern)
+	if node != nil {
+		// 请求方法合法性校验
+		for _, support_method := range node.supportMethods {
+			if support_method == method {
+				return node.handler, pathparams, err
+			}
+		}
+		method_err := fmt.Errorf("不受支持的方法%s", method)
+		return nil, pathparams, method_err
+	} else {
+		return nil, pathparams, err
+	}
 }
