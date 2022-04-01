@@ -23,6 +23,7 @@ Brisk可以用来构建一些简单的api，目前已支持动态路由、自定
 
 <br>
 
+
 ## Getting Started
 ---
 ### 在项目中引入
@@ -34,6 +35,7 @@ package main
 import "github.com/DomineCore/brisk"
 
 ```
+在项目中引入后，请手动执行 `go mod tidy`
 
 ### 创建brisk实例 && 运行brisk应用
 ```go
