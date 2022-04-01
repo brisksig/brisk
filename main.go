@@ -53,6 +53,6 @@ func main() {
 	r.Add("/v2/", http.MethodPost, HelloJSON)
 	b.Router.Include("/api/", r)
 	// 中间件
-	// b.Router.Use(&brisk.LoggingMiddleware{})
-	b.Run(":8001")
+	b.Router.Use(&brisk.LoggingMiddleware{})
+	b.Run("0.0.0.0:8001")
 }

@@ -58,6 +58,10 @@ func (c *Context) SetHeader(key string, value string) {
 	c.ResponseWriter.Header().Set(key, value)
 }
 
+func (c *Context) AddHeader(key string, value string) {
+	c.ResponseWriter.Header().Add(key, value)
+}
+
 // Write Response
 
 func (c *Context) WriteJSON(code int, obj interface{}) {
