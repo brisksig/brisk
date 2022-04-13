@@ -15,7 +15,12 @@ type Brisk struct {
 }
 
 func New() *Brisk {
-	return &Brisk{Router: NewRouter()}
+	return &Brisk{Router: NewRouter(), Conf: NewConf()}
+}
+
+func (b *Brisk) LoadConf() error {
+	// loading viper config
+	return b.Conf.ReadInConfig()
 }
 
 func (b *Brisk) Post(pattern string, handler HandleFunc) {
@@ -50,11 +55,8 @@ func (b *Brisk) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (b *Brisk) Run(addr string) (err error) {
-	// loading viper config
-	load_conf_err := b.Conf.ReadInConfig()
-	if load_conf_err != nil {
-		panic(load_conf_err)
-	}
+	// load Conf
+	b.LoadConf()
 	// Listen
 	fmt.Printf("server running····\n")
 	if strings.HasPrefix(addr, ":") {

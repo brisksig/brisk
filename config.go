@@ -8,3 +8,7 @@ import "github.com/spf13/viper"
 type Conf struct {
 	viper.Viper
 }
+
+func NewConf() *Conf {
+	return &Conf{*viper.New()}
+}
