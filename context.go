@@ -68,10 +68,10 @@ func (c *Context) AddHeader(key string, value string) {
 // Write Response
 
 func (c *Context) WriteJSON(code int, obj interface{}) {
-	// set code
-	c.SetStatusCode(code)
 	// set Header
 	c.SetHeader("Content-type", "application/json")
+	// set code
+	c.SetStatusCode(code)
 	// json
 	encoder := json.NewEncoder(c.ResponseWriter)
 	if err := encoder.Encode(obj); err != nil {
