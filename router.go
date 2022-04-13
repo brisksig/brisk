@@ -27,7 +27,8 @@ func (r *Router) Add(pattern string, method string, handler HandleFunc) {
 }
 
 func (r *Router) Include(pattern string, child *Router) {
-	r.tree.InsertChild(pattern, child)
+	pattern = strings.TrimLeft(pattern, "/")
+	r.tree.root.next[pattern] = child.tree.root
 }
 
 func (r *Router) Dispatch(method string, pattern string, c *Context) (HandleFunc, error) {
