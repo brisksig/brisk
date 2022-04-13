@@ -147,6 +147,29 @@ func (l *LoggingMiddleware) process_response(c *Context) {
 	println(loggingstr)
 }
 ```
+
+### 管理配置
+brisk 使用go知名开源库viper来管理配置，viper被注入在Birsk结构体中，这样我们可以通过app对象来访问配置。
+
+#### 声明配置文件路径
+```go
+b.Conf.SetConfigFile('./config') // 配置文件所在路径
+b.Conf.SetConfigName('settings') // 配置文件名
+b.Conf.SetConfigType('json') // 配置文件类型
+```
+
+
+#### 获取配置项
+```go
+b.Conf.Get("key")
+b.Conf.GetString("key") //返回key对应value的string
+b.Conf.GetBool("key") //返回对应bool值
+```
+
+更多能力请访问viper<br>
+
+<img src="https://pkg.go.dev/badge/mod/github.com/spf13/viper" href="https://pkg.go.dev/github.com/spf13/viper#section-readme" alt="PkgGoDev">
+
 ----
 
 Brisk仍在快速迭代中，敬请期待后续版本的优化👾。
