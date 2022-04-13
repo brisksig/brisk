@@ -168,7 +168,7 @@ b.Conf.GetBool("key") //返回对应bool值
 
 更多能力请访问viper<br>
 
-<img src="https://pkg.go.dev/badge/mod/github.com/spf13/viper" alt="PkgGoDev">
+<img src="https://pkg.go.dev/badge/mod/github.com/spf13/viper" href="https://pkg.go.dev/github.com/spf13/viper#section-readme" alt="PkgGoDev">
 
 ----
 
