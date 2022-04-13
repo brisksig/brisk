@@ -37,21 +37,21 @@ func (b *Brisk) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// 2、路由分发
 	method := c.Method
 	pattern := c.Path
+	// --- 前置中间件
+	for _, middleware := range b.Router.Middlewares {
+		middleware.process_request(c)
+	}
 	handler, err := b.Router.Dispatch(method, pattern, c)
 	if err != nil {
 		c.WriteString(http.StatusNotFound, "404 Not Found")
 	} else {
-		// 3、前置中间件
-		for _, middleware := range b.Router.Middlewares {
-			middleware.process_request(c)
-		}
+		// --- handler process
 		handler(c)
-		// 4、后置中间件
-		for _, middleware := range b.Router.Middlewares {
-			middleware.process_response(c)
-		}
 	}
-
+	// --- 后置中间件
+	for _, middleware := range b.Router.Middlewares {
+		middleware.process_response(c)
+	}
 }
 
 func (b *Brisk) Run(addr string) (err error) {
