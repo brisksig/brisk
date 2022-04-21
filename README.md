@@ -46,7 +46,7 @@ package main
 import "github.com/DomineCore/brisk"
 
 func main() {
-  b := brisk.New()
+	b := brisk.New("./config/settings.json") // 配置文件地址,后文详细介绍
   b.Run(":8000")
 }
 
@@ -57,7 +57,7 @@ func main() {
 // main.go
 
 func main() {
-  b :=brisk.New()
+  b := brisk.New("./config/settings.json")
   b.Get("/", func (c *brisk.Context) {
     c.WriteString(http.StatusOk, "Hello Brisk!")
   })
@@ -153,22 +153,47 @@ brisk 使用go知名开源库viper来管理配置，viper被注入在Birsk结构
 
 #### 声明配置文件路径
 ```go
-b.Conf.SetConfigFile('./config') // 配置文件所在路径
-b.Conf.SetConfigName('settings') // 配置文件名
-b.Conf.SetConfigType('json') // 配置文件类型
+b := brisk.New("./config/settings.json") // 在创建brisk实例时传入配置文件所在路径
 ```
 
 
 #### 获取配置项
 ```go
-b.Conf.Get("key")
-b.Conf.GetString("key") //返回key对应value的string
-b.Conf.GetBool("key") //返回对应bool值
+brisk.Config.Get("key")
+brisk.Config.GetString("key") //返回key对应value的string
+brisk.Config.GetBool("key") //返回对应bool值
 ```
-
 更多能力请访问viper<br>
 
-<img src="https://pkg.go.dev/badge/mod/github.com/spf13/viper" href="https://pkg.go.dev/github.com/spf13/viper#section-readme" alt="PkgGoDev">
+[![Go Reference](https://pkg.go.dev/badge/github.com/DomineCore/brisk.svg)](https://pkg.go.dev/github.com/spf13/viper)
+
+### 使用数据库
+brisk使用gorm管理数据库，数据库的地址、端口等信息可以在配置文件中描述，brisk将自动连接数据库并提供一个全局变量brisk.DB作为项目中使用数据库的核心对象。
+<br>
+
+#### 数据库配置
+以MySQL为例，可以在settings.json配置文件中新增以下的配置项。
+```json
+{
+    "Databases":{
+        "default":{
+            "username":"root",
+            "password":"123456",
+            "host":"127.0.0.1",
+            "port":"3306", 
+            "dbname":"gormdemo", 
+            "charset":"utf8mb4", 
+            "parsetime":"true"
+        }
+    }
+}
+```
+
+#### 使用brisk.DB管理数据
+
+brisk.DB实质上是gorm.DB结构体的对象，使用方式可以查阅gorm文档。
+[![Go Reference](https://pkg.go.dev/badge/github.com/DomineCore/brisk.svg)](https://pkg.go.dev/gorm.io/gorm)
+
 
 ----
 
