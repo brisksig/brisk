@@ -11,16 +11,36 @@ import (
 
 type Brisk struct {
 	Router *Router
-	Conf   *Conf
+	// Conf   *Conf
 }
 
-func New() *Brisk {
-	return &Brisk{Router: NewRouter(), Conf: NewConf()}
+func New(configpath string) *Brisk {
+	// new app
+	brisk := &Brisk{Router: NewRouter()}
+	// load config
+	Config = *NewConf()
+	brisk.LoadConfig(configpath)
+	// load db
+	brisk.LoadDataBase()
+	return brisk
 }
 
-func (b *Brisk) LoadConf() error {
+func (b *Brisk) LoadConfig(configpath string) {
 	// loading viper config
-	return b.Conf.ReadInConfig()
+	configpathslice := strings.Split(configpath, "/")
+	file := configpathslice[len(configpathslice)-1]
+	fileslice := strings.Split(file, ".")
+	name := fileslice[0]
+	filetype := fileslice[1]
+	path := strings.TrimRight(configpath, file)
+	SetConf(path, name, filetype)
+}
+
+func (b *Brisk) LoadDataBase() {
+	// loading database orm instance
+	// build brisk.DB (gorm.DB)
+	connector := NewDBConnector()
+	connector.Connect()
 }
 
 func (b *Brisk) Post(pattern string, handler HandleFunc) {
@@ -56,7 +76,9 @@ func (b *Brisk) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (b *Brisk) Run(addr string) (err error) {
 	// load Conf
-	b.LoadConf()
+	// b.LoadConfig()
+	// load DataBase
+	// b.LoadDataBase()
 	// Listen
 	fmt.Printf("server running····\n")
 	if strings.HasPrefix(addr, ":") {
