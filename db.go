@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -28,8 +29,8 @@ func (db *DBConnector) Connect() {
 	switch db.DriverName {
 	case "mysql":
 		engine = new(MySQL)
-	// case "postgresql":
-	// 	engine = new(PostgreSQL)
+	case "postgresql":
+		engine = new(PostgreSQL)
 	// case "sqlite":
 	// 	engine = new(SQLite)
 	// case "sqlserver":
@@ -81,28 +82,6 @@ func (engine *MySQL) Connect() (*gorm.DB, error) {
 	return db, err
 }
 
-// type PostgreSQL struct {
-// }
-
-// func (engine *PostgreSQL) Init() {
-
-// }
-
-// func (engine *PostgreSQL) Connect(gorm.DB, error) {
-
-// }
-
-// type SQLite struct {
-// }
-
-// func (engine *SQLite) Init() {
-
-// }
-
-// func (engine *SQLite) Connect(gorm.DB, error) {
-
-// }
-
 // type SQLServer struct {
 // }
 
@@ -113,3 +92,51 @@ func (engine *MySQL) Connect() (*gorm.DB, error) {
 // func (engine *SQLServer) Connect(gorm.DB, error) {
 
 // }
+
+// type SQLite struct {
+// 	Filepath string
+// }
+
+// func (engine *SQLite) Init() {
+// 	engine.Filepath = Config.GetString("Databases.default.filepath")
+// }
+
+// func (engine *SQLite) Connect() (gorm.DB, error) {
+// 	db, err := gorm.Open(sqlite.Open(engine.Filepath), &gorm.Config{})
+// 	return db, err
+// }
+
+type PostgreSQL struct {
+	Host     string
+	Username string
+	Password string
+	DBNAME   string
+	Port     string
+	Sslmode  string
+	TimeZone string
+}
+
+func (engine *PostgreSQL) Init() {
+	engine.Host = Config.GetString("Databases.default.host")
+	engine.Username = Config.GetString("Databases.default.username")
+	engine.Password = Config.GetString("Databases.default.password")
+	engine.DBNAME = Config.GetString("Databases.default.dbname")
+	engine.Port = Config.GetString("Databases.default.port")
+	engine.Sslmode = Config.GetString("Databases.default.sslmode")
+	engine.TimeZone = Config.GetString("Databases.default.timezone")
+}
+
+func (engine *PostgreSQL) Connect() (*gorm.DB, error) {
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+		engine.Host,
+		engine.Username,
+		engine.Password,
+		engine.DBNAME,
+		engine.Port,
+		engine.Sslmode,
+		engine.TimeZone,
+	)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	return db, err
+}
