@@ -21,7 +21,10 @@ func New(configpath string) *Brisk {
 	Config = *NewConf()
 	brisk.LoadConfig(configpath)
 	// load db
-	brisk.LoadDataBase()
+	// if usedb is true, execute loadDatabase
+	if Config.GetBool("usedb") {
+		brisk.LoadDataBase()
+	}
 	return brisk
 }
 
