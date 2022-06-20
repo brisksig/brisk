@@ -48,3 +48,26 @@ func TestInsertWithHandler(t *testing.T) {
 	assert.Equal(t, expected_node.isDynamic, actual_node.isDynamic)
 	assert.Equal(t, expected_node.next, actual_node.next)
 }
+
+func TestUse(t *testing.T) {
+	router := NewRouter()
+	router.Use(&CrosMiddleware{})
+	assert.Equal(t, []MiddleWare{&CrosMiddleware{}}, router.Middlewares)
+}
+
+func TestInclude(t *testing.T) {
+	router := NewRouter()
+	router_a := NewRouter()
+	router.Include("/a/", router_a)
+	assert.Equal(t, router_a.tree.root, router.tree.root.next["a/"])
+}
+
+func TestDispatch(t *testing.T) {
+	router := NewRouter()
+	handler := func(c *Context) {}
+	router.Add("/", http.MethodGet, handler)
+	res, err := router.Dispatch(http.MethodGet, "/", &Context{Method: http.MethodGet})
+	if err != nil {
+		assert.Equal(t, res, handler)
+	}
+}
