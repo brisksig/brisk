@@ -198,3 +198,6 @@ brisk.DB实质上是gorm.DB结构体的对象，使用方式可以查阅gorm文�
 ----
 
 Brisk仍在快速迭代中，敬请期待后续版本的优化👾。
+
+
+![Alt](https://repobeats.axiom.co/api/embed/2ae4718e828e32ffd7869998cc7d30c80b835890.svg "Repobeats analytics image")
