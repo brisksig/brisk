@@ -26,6 +26,6 @@ func SetConf(path string, name string, filetype string) {
 	Config.SetConfigType(filetype)
 	err := Config.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+		panic(fmt.Errorf("FATAL ERROR CONFIG FILE: %s", err))
 	}
 }
